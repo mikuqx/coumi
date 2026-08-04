@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>coumm bot store</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@2.0.6/dist/tonconnect-ui.min.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #000);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* Полупрозрачный фоновый логотип */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            background-image: url('https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=150');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.05;
+            filter: grayscale(100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            border-radius: 12px;
+            box-sizing: border-box;
+            z-index: 1;
+        }
+
+        #ton-connect-btn button {
+            background-color: #54b3f3 !important;
+            color: white !important;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+            z-index: 1;
+        }
+
+        /* Карточки анкет */
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Элементы выровнены влево */
+            text-align: left; /* Текст сдвинут влево */
+            border: 1px solid rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card img {
+            width: 100%;
+            height: 140px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-bottom: 10px;
+            background-color: #eee;
+        }
+
+        .card .title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+
+        .card .description {
+            font-size: 11px;
+            color: #777;
+            height: 32px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .view-btn {
+            background-color: #54b3f3;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Полноэкранная шторка анкеты */
+        .bottom-sheet {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--tg-theme-bg-color, #f5f5f5);
+            z-index: 100;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Фоновый логотип внутри шторки */
+        .bottom-sheet::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            background-image: url('https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=150');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.05;
+            filter: grayscale(100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sheet-header {
+            width: 100%;
+            padding: 12px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            touch-action: pan-y;
+            z-index: 2;
+        }
+
+        .drag-handle {
+            width: 40px;
+            height: 4px;
+            background-color: #ccc;
+            border-radius: 2px;
+        }
+
+        .sheet-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 100px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            box-sizing: border-box;
+            z-index: 2;
+        }
+
+        .modal-img {
+            width: 100%;
+            max-width: 360px;
+            height: 240px;
+            border-radius: 20px;
+            object-fit: cover;
+            margin: 0 auto 20px auto;
+            display: block;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        /* Общая внешняя рамка тарифов (очень-очень светло-коричневая) */
+        .tariff-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 30px;
+            background-color: #fcf8f5;
+            border: 1px solid #ebdcd0;
+            padding: 12px;
+            border-radius: 16px;
+            box-sizing: border-box;
+        }
+
+        /* Отдельные прямоугольники тарифов (коричневый чуть темнее) */
+        .tariff-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            cursor: pointer;
+            padding: 12px 14px;
+            background-color: #f4eae1;
+            border-radius: 12px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .radio-circle {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #bda899;
+            border-radius: 50%;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            background-color: transparent;
+        }
+
+        /* Активная опция */
+        .tariff-option.selected .radio-circle {
+            border-color: #f3c4c4;
+            background-color: #f3c4c4;
+        }
+
+        .tariff-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: #3e332a;
+        }
+
+        .bottom-action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 20px;
+            background: var(--tg-theme-bg-color, #f5f5f5);
+            box-sizing: border-box;
+            z-index: 101;
+        }
+
+        .pay-action-btn {
+            background-color: #54b3f3;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-weight: bold;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .success-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 110;
+        }
+
+        .success-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 85%;
+            max-width: 320px;
+            color: var(--tg-theme-text-color, #000);
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div id="balance-info" style="font-weight: bold; font-size: 14px; color: #54b3f3;">💎 0.000 usdt</div>
+        <div id="ton-connect-btn"></div>
+    </div>
+
+    <div class="grid-container" id="grid"></div>
+
+    <div id="profile-sheet" class="bottom-sheet">
+        <div class="sheet-header" id="sheet-drag">
+            <div class="drag-handle"></div>
+        </div>
+        
+        <div class="sheet-content">
+            <img id="modal-image" class="modal-img" src="" alt="">
+            <div id="modal-title" class="modal-title"></div>
+            <div id="modal-description" class="modal-desc"></div>
+            
+            <!-- Тарифы в двух прямоугольниках внутри общего блока -->
+            <div class="tariff-container">
+                <div class="tariff-option selected" id="opt-day" onclick="selectTariff(3.0, 'day')">
+                    <div class="radio-circle"></div>
+                    <div class="tariff-text" id="text-day"></div>
+                </div>
+                <div class="tariff-option" id="opt-week" onclick="selectTariff(20.0, 'week')">
+                    <div class="radio-circle"></div>
+                    <div class="tariff-text" id="text-week"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-action-bar">
+            <button class="pay-action-btn" id="btn-pay" onclick="payTariff()"></button>
+        </div>
+    </div>
+
+    <div class="success-overlay" id="success-overlay">
+        <div class="success-modal">
+            <h3 style="color: #4caf50; margin-top: 0;" id="success-title"></h3>
+            <p id="success-text"></p>
+            <p><a id="secret-link" href="https://t.me/вкусняшка" target="_blank" style="color: #54b3f3; font-weight: bold; font-size: 20px; text-decoration: none;">@вкусняшка</a></p>
+            <button onclick="closeAll()" class="pay-action-btn" id="btn-close"></button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // ⚠️ Поменяй адрес на свой кошелек, куда должны приходить деньги
+        const myWalletAddress = "UQC8xJ1Uka9aeU81lFESasQEQWHk2EXVQ1RZbnUcn_b0VLSN";
+        const userLang = tg.initDataUnsafe?.user?.language_code === 'uk' ? 'uk' : 'ru';
+
+        const locales = {
+            ru: {
+                wallet: "гаманець usdt", view: "смотреть", dayTariff: "1 день — 3 usdt", weekTariff: "1 неделя — 20 usdt",
+                successTitle: "🎉 оплата успешна!", successText: "ваша ссылка:", close: "закрыть",
+                connectAlert: "пожалуйста, сначала подключите ваш кошелек кнопкой сверху!",
+                cancelAlert: "оплата отменена или произошла ошибка.", payText: "оплата"
+            },
+            uk: {
+                wallet: "гаманець usdt", view: "переглянути", dayTariff: "1 день — 3 usdt", weekTariff: "1 тиждень — 20 usdt",
+                back: "назад", successTitle: "🎉 оплата успішна!", successText: "ваше посилання:", close: "закрити",
+                connectAlert: "будь ласка, спочатку підключіть ваш гаманець кнопкою зверху!",
+                cancelAlert: "оплата скасована або сталася помилка.", payText: "оплата"
+            }
+        };
+
+        const products = [
+            { id: 1, img: "https://i.postimg.cc/Y9WmJkRM/IMG-4115.jpg", title: "алина", desc: { ru: "нежная как роза, острая как шипы", uk: "ніжна як троянда, гостра як колючки" }, link: "https://t.me/вкусняшка" },
+            { id: 2, img: "https://i.postimg.cc/PrRT8ZTk/IMG-4114.jpg", title: "катя", desc: { ru: "босс", uk: "бос" }, link: "https://t.me/вкусняшка" }
+        ];
+
+        document.getElementById('text-day').innerText = locales[userLang].dayTariff;
+        document.getElementById('text-week').innerText = locales[userLang].weekTariff;
+        document.getElementById('btn-pay').innerText = locales[userLang].payText;
+        document.getElementById('success-title').innerText = locales[userLang].successTitle;
+        document.getElementById('success-text').innerText = locales[userLang].successText;
+        document.getElementById('btn-close').innerText = locales[userLang].close;
+
+        let selectedProduct = null;
+        let selectedPrice = 3.0;
+
+        // ⚠️ Укажи прямую ссылку на твой манифест на Vercel после первого деплоя
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://твой-проект.vercel.app/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect-btn'
+        });
+
+        tonConnectUI.onStatusChange(async wallet => {
+            if (wallet && tonConnectUI.account) {
+                const address = tonConnectUI.account.address;
+                try {
+                    const response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${address}`);
+                    const data = await response.json();
+                    if (data.ok) {
+                        const balance = (parseInt(data.result) / 1000000000).toFixed(3);
+                        document.getElementById('balance-info').innerText = `💎 ${balance} usdt`;
+                    }
+                } catch (e) {
+                    document.getElementById('balance-info').innerText = `💎 0.000 usdt`;
+                }
+            } else {
+                document.getElementById('balance-info').innerText = `💎 0.000 usdt`;
+            }
+        });
+
+        const grid = document.getElementById('grid');
+        products.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openProfile(p.id);
+            card.innerHTML = `
+                <img src="${p.img}" alt="${p.title}">
+                <div class="title">${p.title}</div>
+                <div class="description">${p.desc[userLang]}</div>
+                <button class="view-btn">${locales[userLang].view}</button>
+            `;
+            grid.appendChild(card);
+        });
+
+        const sheet = document.getElementById('profile-sheet');
+
+        function openProfile(id) {
+            selectedProduct = products.find(p => p.id === id);
+            document.getElementById('modal-image').src = selectedProduct.img;
+            document.getElementById('modal-title').innerText = selectedProduct.title;
+            document.getElementById('modal-description').innerText = selectedProduct.desc[userLang];
+            
+            selectTariff(3.0, 'day');
+
+            sheet.style.display = 'flex';
+            setTimeout(() => {
+                sheet.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function selectTariff(price, type) {
+            selectedPrice = price;
+            document.getElementById('opt-day').classList.remove('selected');
+            document.getElementById('opt-week').classList.remove('selected');
+            
+            if (type === 'day') {
+                document.getElementById('opt-day').classList.add('selected');
+            } else {
+                document.getElementById('opt-week').classList.add('selected');
+            }
+        }
+
+        let startY = 0;
+        let currentY = 0;
+        const dragHandle = document.getElementById('sheet-drag');
+
+        dragHandle.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            sheet.style.transition = 'none';
+        });
+
+        dragHandle.addEventListener('touchmove', (e) => {
+            currentY = e.touches[0].clientY;
+            let deltaY = currentY - startY;
+            if (deltaY > 0) {
+                sheet.style.transform = `translateY(${deltaY}px)`;
+            }
+        });
+
+        dragHandle.addEventListener('touchend', (e) => {
+            sheet.style.transition = 'transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1)';
+            let deltaY = currentY - startY;
+            if (deltaY > 120) {
+                closeProfile();
+            } else {
+                sheet.style.transform = 'translateY(0)';
+            }
+            startY = 0;
+            currentY = 0;
+        });
+
+        function closeProfile() {
+            sheet.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                sheet.style.display = 'none';
+            }, 300);
+        }
+
+        function closeAll() {
+            document.getElementById('success-overlay').style.display = 'none';
+            closeProfile();
+        }
+
+        async function payTariff() {
+            if (!tonConnectUI.connected) {
+                alert(locales[userLang].connectAlert);
+                return;
+            }
+
+            const amountInNanotons = (selectedPrice * 1000000000).toString();
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 120,
+                messages: [{ address: myWalletAddress, amount: amountInNanotons }]
+            };
+
+            try {
+                const result = await tonConnectUI.sendTransaction(transaction);
+                document.getElementById('success-overlay').style.display = 'block';
+            } catch (e) {
+                alert(locales[userLang].cancelAlert);
+            }
+        }
+    </script>
+</body>
+</html>
