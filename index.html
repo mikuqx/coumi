@@ -141,7 +141,7 @@
             cursor: pointer;
         }
 
-        /* Полноэкранная шторка с прокруткой */
+        /* Полноэкранный фиксированный слой анкеты */
         .bottom-sheet {
             display: none;
             position: fixed;
@@ -154,14 +154,11 @@
             transform: translateY(100%);
             transition: transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1);
             box-sizing: border-box;
-            overflow-y: auto; /* Включаем свободный скролл */
-            -webkit-overflow-scrolling: touch;
+            flex-direction: column;
+            overflow: hidden; /* Запрещаем скролл для всего родителя */
         }
 
         .sheet-header {
-            position: sticky;
-            top: 0;
-            background: var(--panel-bg);
             width: 100%;
             padding: 16px 0 10px 0;
             display: flex;
@@ -169,6 +166,8 @@
             align-items: center;
             cursor: grab;
             touch-action: pan-y;
+            flex-shrink: 0;
+            background: var(--panel-bg);
             z-index: 102;
         }
 
@@ -179,9 +178,12 @@
             border-radius: 3px;
         }
 
-        /* Контент анкеты */
+        /* Выделенная область для скролла контента */
         .sheet-content {
-            padding: 10px 20px 140px 20px; /* Отступ снизу под плашку оплаты */
+            flex: 1;
+            overflow-y: auto !important; /* Скроллится ТОЛЬКО эта зона */
+            -webkit-overflow-scrolling: touch;
+            padding: 10px 20px 100px 20px; /* Запас снизу, чтобы контент не уходил под кнопку */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -190,7 +192,7 @@
             width: 100%;
         }
 
-        /* Фото 3:4 крупного красивого размера */
+        /* Фото 3:4 крупного формата */
         .modal-img {
             width: 100%;
             max-width: 360px;
@@ -200,6 +202,7 @@
             margin-bottom: 16px;
             background-color: #ffffff;
             box-shadow: 0 8px 20px rgba(136, 14, 79, 0.12);
+            flex-shrink: 0;
         }
 
         .modal-title {
@@ -207,6 +210,7 @@
             font-weight: bold;
             margin-bottom: 6px;
             color: var(--text-color);
+            flex-shrink: 0;
         }
 
         .modal-desc {
@@ -217,6 +221,7 @@
             line-height: 1.4;
             max-width: 360px;
             word-wrap: break-word;
+            flex-shrink: 0;
         }
 
         /* Выбор тарифов */
@@ -232,6 +237,7 @@
             border-radius: 18px;
             box-sizing: border-box;
             margin-bottom: 15px;
+            flex-shrink: 0;
         }
 
         .tariff-option {
@@ -273,20 +279,21 @@
             color: var(--text-color);
         }
 
-        /* Закрепленная кнопка внизу */
+        /* Закрепленный независимый блок оплаты внизу экрана */
         .bottom-action-bar {
-            position: fixed;
+            position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            padding: 15px 20px;
-            background: linear-gradient(180deg, rgba(255, 241, 248, 0.75) 0%, var(--panel-bg) 35%);
+            padding: 15px 20px 25px 20px;
+            background: linear-gradient(180deg, rgba(255, 241, 248, 0.8) 0%, var(--panel-bg) 35%);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             box-sizing: border-box;
             z-index: 105;
             display: flex;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .pay-action-btn {
@@ -358,7 +365,8 @@
             <div class="drag-handle"></div>
         </div>
         
-        <div class="sheet-content">
+        <!-- Ограниченная зона прокрутки -->
+        <div class="sheet-content" id="sheet-content">
             <img id="modal-image" class="modal-img" src="" alt="girl">
             <div id="modal-title" class="modal-title"></div>
             <div id="modal-description" class="modal-desc"></div>
@@ -376,6 +384,7 @@
             </div>
         </div>
 
+        <!-- Фиксированная нижняя панель с кнопкой -->
         <div class="bottom-action-bar">
             <button class="pay-action-btn" onclick="payTariff()">оплатить ❤️‍🔥</button>
         </div>
@@ -398,13 +407,13 @@
 
         const myWalletAddress = "UQC8xJ1Uka9aeU81lFESasQEQWHk2EXVQ1RZbnUcn_b0VLSN";
 
-        // Твой оригинальный манифест
+        // Манифест TON Connect
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://coumi.vercel.app/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-btn'
         });
 
-        // Получение и обновление баланса при подключении
+        // Получение баланса
         tonConnectUI.onStatusChange(async wallet => {
             if (wallet && tonConnectUI.account) {
                 const address = tonConnectUI.account.address;
@@ -448,6 +457,7 @@
         });
 
         const sheet = document.getElementById('profile-sheet');
+        const sheetContent = document.getElementById('sheet-content');
 
         function openProfile(id) {
             selectedProduct = products.find(p => p.id === id);
@@ -458,9 +468,9 @@
             selectTariff(3.0, 'day');
 
             // Сбрасываем скролл анкеты на самый верх
-            sheet.scrollTop = 0;
+            sheetContent.scrollTop = 0;
 
-            sheet.style.display = 'block';
+            sheet.style.display = 'flex';
             setTimeout(() => {
                 sheet.style.transform = 'translateY(0)';
             }, 10);
@@ -478,7 +488,7 @@
             }
         }
 
-        // Закрытие шторки свайпом вниз за верхний ярлычок
+        // Закрытие свайпом за ролик сверху
         let startY = 0;
         let currentY = 0;
         const dragHandle = document.getElementById('sheet-drag');
