@@ -141,23 +141,24 @@
             cursor: pointer;
         }
 
-        /* Полноэкранный фиксированный слой анкеты */
+        /* Полноэкранный контейнер анкеты */
         .bottom-sheet {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: 100vh;
+            height: 100dvh;
             background: var(--panel-bg);
             z-index: 100;
             transform: translateY(100%);
             transition: transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1);
             box-sizing: border-box;
             flex-direction: column;
-            overflow: hidden; /* Запрещаем скролл для всего родителя */
         }
 
+        /* Заголовок с полоской закрытия */
         .sheet-header {
             width: 100%;
             padding: 16px 0 10px 0;
@@ -178,21 +179,22 @@
             border-radius: 3px;
         }
 
-        /* Выделенная область для скролла контента */
+        /* Зона скролла контента */
         .sheet-content {
-            flex: 1;
-            overflow-y: auto !important; /* Скроллится ТОЛЬКО эта зона */
-            -webkit-overflow-scrolling: touch;
-            padding: 10px 20px 100px 20px; /* Запас снизу, чтобы контент не уходил под кнопку */
+            height: calc(100% - 110px); /* Четко выделяем высоту под контент */
+            overflow-y: scroll !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding: 10px 20px 40px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
             box-sizing: border-box;
             width: 100%;
+            touch-action: pan-y !important;
         }
 
-        /* Фото 3:4 крупного формата */
+        /* Фото 3:4 */
         .modal-img {
             width: 100%;
             max-width: 360px;
@@ -203,6 +205,7 @@
             background-color: #ffffff;
             box-shadow: 0 8px 20px rgba(136, 14, 79, 0.12);
             flex-shrink: 0;
+            pointer-events: none; /* Запрещает перехват касаний картинкой для идеального скролла */
         }
 
         .modal-title {
@@ -224,7 +227,7 @@
             flex-shrink: 0;
         }
 
-        /* Выбор тарифов */
+        /* Тарифы */
         .tariff-container {
             display: flex;
             flex-direction: column;
@@ -236,7 +239,7 @@
             padding: 12px;
             border-radius: 18px;
             box-sizing: border-box;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             flex-shrink: 0;
         }
 
@@ -279,20 +282,19 @@
             color: var(--text-color);
         }
 
-        /* Закрепленный независимый блок оплаты внизу экрана */
+        /* Закрепленная снизу плашка оплаты */
         .bottom-action-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
+            height: 80px;
             width: 100%;
-            padding: 15px 20px 25px 20px;
-            background: linear-gradient(180deg, rgba(255, 241, 248, 0.8) 0%, var(--panel-bg) 35%);
+            padding: 10px 20px 20px 20px;
+            background: linear-gradient(180deg, rgba(255, 241, 248, 0.85) 0%, var(--panel-bg) 40%);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             box-sizing: border-box;
             z-index: 105;
             display: flex;
             justify-content: center;
+            align-items: center;
             flex-shrink: 0;
         }
 
@@ -310,7 +312,7 @@
             box-shadow: 0 4px 15px rgba(84, 179, 243, 0.3);
         }
 
-        /* Уведомление об успешной оплате */
+        /* Модалка успеха */
         .success-overlay {
             display: none;
             position: fixed;
@@ -365,7 +367,7 @@
             <div class="drag-handle"></div>
         </div>
         
-        <!-- Ограниченная зона прокрутки -->
+        <!-- Скроллируемая область контента -->
         <div class="sheet-content" id="sheet-content">
             <img id="modal-image" class="modal-img" src="" alt="girl">
             <div id="modal-title" class="modal-title"></div>
@@ -384,7 +386,7 @@
             </div>
         </div>
 
-        <!-- Фиксированная нижняя панель с кнопкой -->
+        <!-- Неподвижная кнопка снизу -->
         <div class="bottom-action-bar">
             <button class="pay-action-btn" onclick="payTariff()">оплатить ❤️‍🔥</button>
         </div>
@@ -467,7 +469,6 @@
             
             selectTariff(3.0, 'day');
 
-            // Сбрасываем скролл анкеты на самый верх
             sheetContent.scrollTop = 0;
 
             sheet.style.display = 'flex';
@@ -488,7 +489,7 @@
             }
         }
 
-        // Закрытие свайпом за ролик сверху
+        // Закрытие свайпом только за верхнюю плашку
         let startY = 0;
         let currentY = 0;
         const dragHandle = document.getElementById('sheet-drag');
