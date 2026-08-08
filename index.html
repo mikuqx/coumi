@@ -155,7 +155,6 @@
             transition: transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1);
             box-sizing: border-box;
             flex-direction: column;
-            overflow: hidden;
         }
 
         .sheet-header {
@@ -176,12 +175,13 @@
             border-radius: 3px;
         }
 
-        /* Область с прокруткой */
+        /* Область с обязательным включением прокрутки */
         .sheet-content {
             flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding: 0 20px 120px 20px; /* Большой запас снизу, чтобы кнопка не перекрывала выбор */
+            overflow-y: scroll !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+            padding: 0 20px 140px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -229,7 +229,8 @@
             padding: 12px;
             border-radius: 18px;
             box-sizing: border-box;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            flex-shrink: 0;
         }
 
         .tariff-option {
@@ -271,14 +272,14 @@
             color: var(--text-color);
         }
 
-        /* Закрепленная снизу панель с кнопкой */
+        /* Нижняя закрепленная плашка */
         .bottom-action-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
             padding: 15px 20px;
-            background: linear-gradient(180deg, rgba(255, 241, 248, 0.8) 0%, var(--panel-bg) 40%);
+            background: linear-gradient(180deg, rgba(255, 241, 248, 0.85) 0%, var(--panel-bg) 40%);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             box-sizing: border-box;
@@ -349,13 +350,13 @@
         </div>
     </div>
 
-    <!-- Полноэкранная анкетка с поддержкой скролла -->
+    <!-- Полноэкранная анкетка -->
     <div id="profile-sheet" class="bottom-sheet">
         <div class="sheet-header" id="sheet-drag">
             <div class="drag-handle"></div>
         </div>
         
-        <div class="sheet-content">
+        <div class="sheet-content" id="sheet-content">
             <img id="modal-image" class="modal-img" src="" alt="girl">
             <div id="modal-title" class="modal-title"></div>
             <div id="modal-description" class="modal-desc"></div>
@@ -445,6 +446,7 @@
         });
 
         const sheet = document.getElementById('profile-sheet');
+        const sheetContent = document.getElementById('sheet-content');
 
         function openProfile(id) {
             selectedProduct = products.find(p => p.id === id);
@@ -454,8 +456,8 @@
             
             selectTariff(3.0, 'day');
 
-            // Сбрасываем скролл вверх при открытии
-            document.querySelector('.sheet-content').scrollTop = 0;
+            // Сброс прокрутки на самый верх
+            sheetContent.scrollTop = 0;
 
             sheet.style.display = 'flex';
             setTimeout(() => {
@@ -475,7 +477,7 @@
             }
         }
 
-        // Свайп за верхнюю ручку шторки
+        // Свайп закрытия работает ТОЛЬКО при потягивании за розоватую ручку сверху
         let startY = 0;
         let currentY = 0;
         const dragHandle = document.getElementById('sheet-drag');
@@ -496,7 +498,7 @@
         dragHandle.addEventListener('touchend', () => {
             sheet.style.transition = 'transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1)';
             let deltaY = currentY - startY;
-            if (deltaY > 120) {
+            if (deltaY > 100) {
                 closeProfile();
             } else {
                 sheet.style.transform = 'translateY(0)';
