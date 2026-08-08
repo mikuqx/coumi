@@ -27,17 +27,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Полупрозрачная надпись coum под углом по всему фону */
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><text x="20" y="60" fill="%23880e4f" fill-opacity="0.08" font-family="sans-serif" font-weight="bold" font-size="22" transform="rotate(-35 60 60)">coum</text></svg>');
-            background-size: 100px 100px;
+            /* Уменьшенные, хаотично повернутые и реже расположенные надписи coum */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><text x="15" y="40" fill="%23880e4f" fill-opacity="0.06" font-family="sans-serif" font-weight="bold" font-size="13" transform="rotate(-25 15 40)">coum</text><text x="100" y="110" fill="%23880e4f" fill-opacity="0.05" font-family="sans-serif" font-weight="bold" font-size="11" transform="rotate(18 100 110)">coum</text><text x="110" y="35" fill="%23880e4f" fill-opacity="0.06" font-family="sans-serif" font-weight="bold" font-size="12" transform="rotate(-40 110 35)">coum</text><text x="35" y="130" fill="%23880e4f" fill-opacity="0.05" font-family="sans-serif" font-weight="bold" font-size="10" transform="rotate(12 35 130)">coum</text></svg>');
+            background-size: 160px 160px;
             background-repeat: repeat;
         }
 
         #app {
             width: 100%;
             max-width: 500px;
-            /* Отступ сверху, чтобы анкетка не открывалась на весь экран */
-            padding-top: 60px; 
+            padding-top: 15px; 
+            padding-bottom: 30px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -46,7 +46,7 @@
 
         /* Кнопка TON Connect */
         #ton-connect-btn {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         /* Карточка анкеты */
@@ -59,7 +59,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             box-sizing: border-box;
         }
 
@@ -163,6 +163,7 @@
             margin-top: 8px;
             padding: 10px;
             border-radius: 10px;
+            color: #fff;
         }
 
         .btn-buy:hover {
@@ -171,7 +172,7 @@
 
         /* Статусные сообщения */
         #status-message {
-            margin-top: 15px;
+            margin-top: 10px;
             padding: 15px;
             border-radius: 16px;
             text-align: center;
@@ -206,8 +207,11 @@
         <!-- Кнопка TON Connect -->
         <div id="ton-connect-btn"></div>
 
+        <!-- Сообщение о статусе -->
+        <div id="status-message"></div>
+
         <!-- Панель анкет -->
-        <div class="main-panel" id="main-panel" style="display:none;">
+        <div class="main-panel" id="main-panel">
             <div class="profile-header">
                 <div class="profile-pic" style="background-image: url('https://w.forfun.com/fetch/f2/f2a36b280145f4fb49e894080928a6f4.jpeg');"></div>
                 <div class="profile-info">
@@ -239,9 +243,6 @@
 
             <button class="btn" onclick="tg.close()">закрыть 😳</button>
         </div>
-
-        <!-- Сообщение о статусе -->
-        <div id="status-message"></div>
     </div>
 
     <script>
@@ -251,19 +252,16 @@
             buttonRootId: 'ton-connect-btn'
         });
 
-        tg.expand();
+        tg.ready();
 
         const mainPanel = document.getElementById('main-panel');
         const statusMessage = document.getElementById('status-message');
 
-        // Отслеживание подключения кошелька
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
                 showStatus('кошелёк подключен 💳', 'info');
-                mainPanel.style.display = 'flex';
             } else {
-                showStatus('подключи кошелёк, чтобы продолжить 👛', 'info');
-                mainPanel.style.display = 'none';
+                showStatus('подключи кошелёк, чтобы оплатить 👛', 'info');
             }
         });
 
@@ -281,13 +279,12 @@
 
         async function startPay(amountUsdt) {
             if (!tonConnectUI.account) {
-                tg.showAlert('подключи кошелёк 💳');
+                showStatus('зайчик, сначала подключи кошелёк 💳', 'error');
                 return;
             }
 
             showStatus('ожидаем подтверждения в кошельке... ⏳', 'info');
 
-            // Укажи здесь адрес своего кошелька TON
             const destinationAddress = 'UQDC_вашкошелек_здесь';
 
             const tx = {
@@ -295,7 +292,7 @@
                 messages: [
                     {
                         address: destinationAddress,
-                        amount: "50000000" // 0.05 TON
+                        amount: "50000000"
                     }
                 ]
             };
@@ -304,17 +301,14 @@
                 const result = await tonConnectUI.sendTransaction(tx);
                 console.log('Transaction sent:', result);
                 
-                // Текст при успешной оплате
                 showStatus('оплата прошла!\nнапиши @coumm_admin\nдля того чтоб перейти к общению\n💗', 'success');
-                mainPanel.style.display = 'none';
             } catch (error) {
                 console.error('Transaction failed:', error);
-                
-                // Текст при недостатке средств или отмене
                 showStatus('зайчик, недостаточно средств… 😔', 'error');
             }
         }
     </script>
 </body>
 </html>
+
 
