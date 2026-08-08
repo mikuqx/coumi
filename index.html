@@ -141,7 +141,7 @@
             cursor: pointer;
         }
 
-        /* Шторка просмотра анкеты */
+        /* Полноэкранная шторка с прокруткой */
         .bottom-sheet {
             display: none;
             position: fixed;
@@ -154,11 +154,14 @@
             transform: translateY(100%);
             transition: transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1);
             box-sizing: border-box;
-            flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto; /* Включаем свободный скролл */
+            -webkit-overflow-scrolling: touch;
         }
 
         .sheet-header {
+            position: sticky;
+            top: 0;
+            background: var(--panel-bg);
             width: 100%;
             padding: 16px 0 10px 0;
             display: flex;
@@ -166,8 +169,7 @@
             align-items: center;
             cursor: grab;
             touch-action: pan-y;
-            flex-shrink: 0;
-            background: var(--panel-bg);
+            z-index: 102;
         }
 
         .drag-handle {
@@ -177,47 +179,44 @@
             border-radius: 3px;
         }
 
-        /* Зона прокрутки контента */
+        /* Контент анкеты */
         .sheet-content {
-            flex: 1;
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            padding: 10px 20px 140px 20px;
+            padding: 10px 20px 140px 20px; /* Отступ снизу под плашку оплаты */
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
             box-sizing: border-box;
+            width: 100%;
         }
 
-        /* Фото аккуратного размера */
+        /* Фото 3:4 крупного красивого размера */
         .modal-img {
             width: 100%;
-            max-width: 320px;
-            height: 240px;
-            border-radius: 20px;
+            max-width: 360px;
+            aspect-ratio: 3 / 4;
+            border-radius: 22px;
             object-fit: cover;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             background-color: #ffffff;
-            box-shadow: 0 6px 18px rgba(136, 14, 79, 0.08);
-            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(136, 14, 79, 0.12);
         }
 
         .modal-title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             color: var(--text-color);
-            flex-shrink: 0;
         }
 
         .modal-desc {
-            font-size: 14px;
+            font-size: 15px;
             color: #880e4f;
-            opacity: 0.8;
-            margin-bottom: 16px;
+            opacity: 0.85;
+            margin-bottom: 22px;
+            line-height: 1.4;
+            max-width: 360px;
             word-wrap: break-word;
-            flex-shrink: 0;
         }
 
         /* Выбор тарифов */
@@ -226,14 +225,13 @@
             flex-direction: column;
             gap: 10px;
             width: 100%;
-            max-width: 320px;
+            max-width: 360px;
             background-color: #ffffff;
             border: 1px solid #f8bbd0;
             padding: 12px;
             border-radius: 18px;
             box-sizing: border-box;
             margin-bottom: 15px;
-            flex-shrink: 0;
         }
 
         .tariff-option {
@@ -275,18 +273,18 @@
             color: var(--text-color);
         }
 
-        /* Нижняя закрепленная плашка */
+        /* Закрепленная кнопка внизу */
         .bottom-action-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            padding: 12px 20px 20px 20px;
-            background: linear-gradient(180deg, rgba(255, 241, 248, 0.7) 0%, var(--panel-bg) 30%);
+            padding: 15px 20px;
+            background: linear-gradient(180deg, rgba(255, 241, 248, 0.75) 0%, var(--panel-bg) 35%);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             box-sizing: border-box;
-            z-index: 101;
+            z-index: 105;
             display: flex;
             justify-content: center;
         }
@@ -300,8 +298,9 @@
             font-weight: bold;
             font-size: 16px;
             width: 100%;
-            max-width: 320px;
+            max-width: 360px;
             cursor: pointer;
+            box-shadow: 0 4px 15px rgba(84, 179, 243, 0.3);
         }
 
         /* Уведомление об успешной оплате */
@@ -359,7 +358,7 @@
             <div class="drag-handle"></div>
         </div>
         
-        <div class="sheet-content" id="sheet-content">
+        <div class="sheet-content">
             <img id="modal-image" class="modal-img" src="" alt="girl">
             <div id="modal-title" class="modal-title"></div>
             <div id="modal-description" class="modal-desc"></div>
@@ -449,7 +448,6 @@
         });
 
         const sheet = document.getElementById('profile-sheet');
-        const sheetContent = document.getElementById('sheet-content');
 
         function openProfile(id) {
             selectedProduct = products.find(p => p.id === id);
@@ -459,9 +457,10 @@
             
             selectTariff(3.0, 'day');
 
-            sheetContent.scrollTop = 0;
+            // Сбрасываем скролл анкеты на самый верх
+            sheet.scrollTop = 0;
 
-            sheet.style.display = 'flex';
+            sheet.style.display = 'block';
             setTimeout(() => {
                 sheet.style.transform = 'translateY(0)';
             }, 10);
@@ -479,7 +478,7 @@
             }
         }
 
-        // Свайп закрытия за верхний ярлычок
+        // Закрытие шторки свайпом вниз за верхний ярлычок
         let startY = 0;
         let currentY = 0;
         const dragHandle = document.getElementById('sheet-drag');
