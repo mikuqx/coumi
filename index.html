@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Coumm Bot Store 🐱</title>
-    <!-- Подключаем скрипт Telegram Web App -->
+    <title>coumm bot store 🐱</title>
+    <!-- Подключаем Telegram Web App и TON Connect -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем библиотеку TON Connect -->
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@2.0.6/dist/tonconnect-ui.min.js"></script>
     <style>
         :root {
             --bg-color: #fce4ec; /* Нежно-розовый фон */
             --text-color: #880e4f; /* Тёмно-малиновый текст */
-            --btn-bg: #e91e63; /* Малиновые кнопки */
-            --btn-text: #ffffff;
-            --accent-blue: #03a9f4; /* Голубой цвет для покупки */
-            --panel-bg: #fff1f8; /* Светло-розовая панель */
+            --btn-bg: #e91e63;
+            --accent-blue: #54b3f3;
+            --panel-bg: #fff1f8;
         }
 
         body {
@@ -27,7 +25,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Уменьшенные, хаотично повернутые и реже расположенные надписи coum */
+            /* Мелкие, хаотичные надписи coum */
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><text x="15" y="40" fill="%23880e4f" fill-opacity="0.06" font-family="sans-serif" font-weight="bold" font-size="13" transform="rotate(-25 15 40)">coum</text><text x="100" y="110" fill="%23880e4f" fill-opacity="0.05" font-family="sans-serif" font-weight="bold" font-size="11" transform="rotate(18 100 110)">coum</text><text x="110" y="35" fill="%23880e4f" fill-opacity="0.06" font-family="sans-serif" font-weight="bold" font-size="12" transform="rotate(-40 110 35)">coum</text><text x="35" y="130" fill="%23880e4f" fill-opacity="0.05" font-family="sans-serif" font-weight="bold" font-size="10" transform="rotate(12 35 130)">coum</text></svg>');
             background-size: 160px 160px;
             background-repeat: repeat;
@@ -44,12 +42,10 @@
             align-items: center;
         }
 
-        /* Кнопка TON Connect */
         #ton-connect-btn {
             margin-bottom: 15px;
         }
 
-        /* Карточка анкеты */
         .main-panel {
             background-color: var(--panel-bg);
             width: 90%;
@@ -59,7 +55,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 15px;
             box-sizing: border-box;
         }
 
@@ -71,13 +66,11 @@
         }
 
         .profile-pic {
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background-color: #ff80ab;
-            margin-right: 15px;
-            background-size: cover;
-            background-position: center;
+            margin-right: 12px;
+            object-fit: cover;
         }
 
         .profile-info {
@@ -96,7 +89,6 @@
             color: #ad1457;
         }
 
-        /* Галерея карточек */
         .gallery {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -111,13 +103,18 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .card:active {
+            transform: scale(0.97);
         }
 
         .card-img {
             width: 100%;
             height: 140px;
-            background-size: cover;
-            background-position: center;
+            object-fit: cover;
         }
 
         .card-info {
@@ -128,77 +125,194 @@
         .card-name {
             font-weight: bold;
             font-size: 1em;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
             color: var(--text-color);
         }
 
-        .card-price {
-            font-size: 0.95em;
-            color: var(--accent-blue);
-            font-weight: bold;
-        }
-
-        /* Кнопки */
-        .btn {
-            background-color: var(--btn-bg); /* Малиновый */
-            color: var(--btn-text);
+        .btn-view {
+            background-color: var(--accent-blue);
+            color: #ffffff;
             border: none;
-            padding: 12px 20px;
-            border-radius: 14px;
-            font-size: 0.95em;
+            width: 100%;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 0.9em;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s;
-            margin-top: 15px;
         }
 
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        /* Голубая кнопка покупки */
-        .btn-buy {
-            background-color: var(--accent-blue);
+        /* Шторка просмотра анкеты */
+        .bottom-sheet {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            margin-top: 8px;
-            padding: 10px;
-            border-radius: 10px;
-            color: #fff;
+            height: 100%;
+            background: var(--panel-bg);
+            z-index: 100;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1);
+            box-sizing: border-box;
+            flex-direction: column;
         }
 
-        .btn-buy:hover {
-            background-color: #039be5;
+        .sheet-header {
+            width: 100%;
+            padding: 16px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            touch-action: pan-y;
         }
 
-        /* Статусные сообщения */
-        #status-message {
-            margin-top: 10px;
+        .drag-handle {
+            width: 45px;
+            height: 5px;
+            background-color: #f3c4c4;
+            border-radius: 3px;
+        }
+
+        .sheet-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 100px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .modal-img {
+            width: 100%;
+            max-width: 320px;
+            height: 220px;
+            border-radius: 20px;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: var(--text-color);
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: #880e4f;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        /* Выбор тарифов */
+        .tariff-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 340px;
+            background-color: #ffffff;
+            border: 1px solid #f8bbd0;
+            padding: 12px;
+            border-radius: 18px;
+            box-sizing: border-box;
+        }
+
+        .tariff-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            cursor: pointer;
+            padding: 12px 14px;
+            background-color: #fff1f8;
+            border-radius: 12px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .radio-circle {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e91e63;
+            border-radius: 50%;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            background-color: transparent;
+        }
+
+        .tariff-option.selected {
+            background-color: #fce4ec;
+        }
+
+        .tariff-option.selected .radio-circle {
+            border-color: #e91e63;
+            background-color: #e91e63;
+        }
+
+        .tariff-text {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .bottom-action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 20px;
+            background: var(--panel-bg);
+            box-sizing: border-box;
+            z-index: 101;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pay-action-btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
             padding: 15px;
             border-radius: 16px;
-            text-align: center;
             font-weight: bold;
+            font-size: 16px;
+            width: 100%;
+            max-width: 340px;
+            cursor: pointer;
+        }
+
+        /* Уведомление об успешной оплате */
+        .success-overlay {
             display: none;
-            width: 90%;
-            box-sizing: border-box;
-            white-space: pre-line;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 110;
         }
 
-        .status-info {
-            background-color: #f8bbd0;
+        .success-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 85%;
+            max-width: 320px;
             color: var(--text-color);
-            display: block !important;
-        }
-
-        .status-success {
-            background-color: #e1f5fe;
-            color: #0277bd;
-            display: block !important;
-        }
-
-        .status-error {
-            background-color: #ffebee;
-            color: #c62828;
-            display: block !important;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -207,108 +321,184 @@
         <!-- Кнопка TON Connect -->
         <div id="ton-connect-btn"></div>
 
-        <!-- Сообщение о статусе -->
-        <div id="status-message"></div>
-
-        <!-- Панель анкет -->
-        <div class="main-panel" id="main-panel">
+        <!-- Панель со списками анкет -->
+        <div class="main-panel">
             <div class="profile-header">
-                <div class="profile-pic" style="background-image: url('https://w.forfun.com/fetch/f2/f2a36b280145f4fb49e894080928a6f4.jpeg');"></div>
+                <img class="profile-pic" src="https://i.postimg.cc/Y9WmJkRM/IMG-4115.jpg" alt="coum store">
                 <div class="profile-info">
                     <span class="profile-name">coum store 😏</span>
                     <span class="profile-status">выбери свою зайку 💗</span>
                 </div>
             </div>
 
-            <div class="gallery">
-                <!-- Анкета 1 -->
-                <div class="card">
-                    <div class="card-img" style="background-image: url('https://w.forfun.com/fetch/f2/f2a36b280145f4fb49e894080928a6f4.jpeg');"></div>
-                    <div class="card-info">
-                        <div class="card-name">алина 🎀</div>
-                        <div class="card-price">1 USDT 💎</div>
-                        <button class="btn btn-buy" onclick="startPay(1)">смотреть ❤️‍🔥</button>
-                    </div>
+            <div class="gallery" id="grid"></div>
+        </div>
+    </div>
+
+    <!-- Полноэкранная анкетка -->
+    <div id="profile-sheet" class="bottom-sheet">
+        <div class="sheet-header" id="sheet-drag">
+            <div class="drag-handle"></div>
+        </div>
+        
+        <div class="sheet-content">
+            <img id="modal-image" class="modal-img" src="" alt="girl">
+            <div id="modal-title" class="modal-title"></div>
+            <div id="modal-description" class="modal-desc"></div>
+            
+            <!-- Тарифы -->
+            <div class="tariff-container">
+                <div class="tariff-option selected" id="opt-day" onclick="selectTariff(3.0, 'day')">
+                    <div class="radio-circle"></div>
+                    <div class="tariff-text">1 день — 3 usdt</div>
                 </div>
-                <!-- Анкета 2 -->
-                <div class="card">
-                    <div class="card-img" style="background-image: url('https://i.pinimg.com/736x/88/54/a1/8854a10df79e1b74a38dfc6d4834ffba.jpg');"></div>
-                    <div class="card-info">
-                        <div class="card-name">катя 🤍</div>
-                        <div class="card-price">5 USDT 💎</div>
-                        <button class="btn btn-buy" onclick="startPay(5)">смотреть 🍑</button>
-                    </div>
+                <div class="tariff-option" id="opt-week" onclick="selectTariff(20.0, 'week')">
+                    <div class="radio-circle"></div>
+                    <div class="tariff-text">1 неделя — 20 usdt</div>
                 </div>
             </div>
+        </div>
 
-            <button class="btn" onclick="tg.close()">закрыть 😳</button>
+        <div class="bottom-action-bar">
+            <button class="pay-action-btn" onclick="payTariff()">оплатить ❤️‍🔥</button>
+        </div>
+    </div>
+
+    <!-- Модалка успеха -->
+    <div class="success-overlay" id="success-overlay">
+        <div class="success-modal">
+            <h3 style="color: #e91e63; margin-top: 0;">🎉 оплата успешна!</h3>
+            <p>напиши админу для доступа:</p>
+            <p><a id="secret-link" href="https://t.me/coumm_admin" target="_blank" style="color: #54b3f3; font-weight: bold; font-size: 18px; text-decoration: none;">@coumm_admin</a></p>
+            <button onclick="closeAll()" class="pay-action-btn">закрыть 💗</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        const myWalletAddress = "UQC8xJ1Uka9aeU81lFESasQEQWHk2EXVQ1RZbnUcn_b0VLSN";
+
+        // Твой оригинальный манифест
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://coumi.vercel.app/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-btn'
         });
 
-        tg.ready();
+        const products = [
+            { id: 1, img: "https://i.postimg.cc/Y9WmJkRM/IMG-4115.jpg", title: "алина 🎀", desc: "нежная как роза, острая как шипы" },
+            { id: 2, img: "https://i.postimg.cc/PrRT8ZTk/IMG-4114.jpg", title: "катя 🤍", desc: "босс" }
+        ];
 
-        const mainPanel = document.getElementById('main-panel');
-        const statusMessage = document.getElementById('status-message');
+        let selectedProduct = null;
+        let selectedPrice = 3.0;
 
-        tonConnectUI.onStatusChange(wallet => {
-            if (wallet) {
-                showStatus('кошелёк подключен 💳', 'info');
-            } else {
-                showStatus('подключи кошелёк, чтобы оплатить 👛', 'info');
-            }
+        const grid = document.getElementById('grid');
+        products.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openProfile(p.id);
+            card.innerHTML = `
+                <img class="card-img" src="${p.img}" alt="${p.title}">
+                <div class="card-info">
+                    <div class="card-name">${p.title}</div>
+                    <button class="btn-view">смотреть ❤️‍🔥</button>
+                </div>
+            `;
+            grid.appendChild(card);
         });
 
-        function showStatus(text, type) {
-            statusMessage.textContent = text;
-            statusMessage.className = '';
-            if (type === 'success') {
-                statusMessage.classList.add('status-success');
-            } else if (type === 'error') {
-                statusMessage.classList.add('status-error');
+        const sheet = document.getElementById('profile-sheet');
+
+        function openProfile(id) {
+            selectedProduct = products.find(p => p.id === id);
+            document.getElementById('modal-image').src = selectedProduct.img;
+            document.getElementById('modal-title').innerText = selectedProduct.title;
+            document.getElementById('modal-description').innerText = selectedProduct.desc;
+            
+            selectTariff(3.0, 'day');
+
+            sheet.style.display = 'flex';
+            setTimeout(() => {
+                sheet.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function selectTariff(price, type) {
+            selectedPrice = price;
+            document.getElementById('opt-day').classList.remove('selected');
+            document.getElementById('opt-week').classList.remove('selected');
+            
+            if (type === 'day') {
+                document.getElementById('opt-day').classList.add('selected');
             } else {
-                statusMessage.classList.add('status-info');
+                document.getElementById('opt-week').classList.add('selected');
             }
         }
 
-        async function startPay(amountUsdt) {
-            if (!tonConnectUI.account) {
-                showStatus('зайчик, сначала подключи кошелёк 💳', 'error');
+        // Свайп шторки вниз для закрытия
+        let startY = 0;
+        let currentY = 0;
+        const dragHandle = document.getElementById('sheet-drag');
+
+        dragHandle.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            sheet.style.transition = 'none';
+        });
+
+        dragHandle.addEventListener('touchmove', (e) => {
+            currentY = e.touches[0].clientY;
+            let deltaY = currentY - startY;
+            if (deltaY > 0) {
+                sheet.style.transform = `translateY(${deltaY}px)`;
+            }
+        });
+
+        dragHandle.addEventListener('touchend', () => {
+            sheet.style.transition = 'transform 0.3s cubic-bezier(0.1, 0.5, 0.1, 1)';
+            let deltaY = currentY - startY;
+            if (deltaY > 120) {
+                closeProfile();
+            } else {
+                sheet.style.transform = 'translateY(0)';
+            }
+            startY = 0;
+            currentY = 0;
+        });
+
+        function closeProfile() {
+            sheet.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                sheet.style.display = 'none';
+            }, 300);
+        }
+
+        function closeAll() {
+            document.getElementById('success-overlay').style.display = 'none';
+            closeProfile();
+        }
+
+        async function payTariff() {
+            if (!tonConnectUI.connected) {
+                alert('зайчик, сначала подключи кошелёк 💳');
                 return;
             }
 
-            showStatus('ожидаем подтверждения в кошельке... ⏳', 'info');
-
-            const destinationAddress = 'UQDC_вашкошелек_здесь';
-
-            const tx = {
-                validUntil: Math.floor(Date.now() / 1000) + 600,
-                messages: [
-                    {
-                        address: destinationAddress,
-                        amount: "50000000"
-                    }
-                ]
+            const amountInNanotons = (selectedPrice * 1000000000).toString();
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 120,
+                messages: [{ address: myWalletAddress, amount: amountInNanotons }]
             };
 
             try {
-                const result = await tonConnectUI.sendTransaction(tx);
-                console.log('Transaction sent:', result);
-                
-                showStatus('оплата прошла!\nнапиши @coumm_admin\nдля того чтоб перейти к общению\n💗', 'success');
-            } catch (error) {
-                console.error('Transaction failed:', error);
-                showStatus('зайчик, недостаточно средств… 😔', 'error');
+                await tonConnectUI.sendTransaction(transaction);
+                document.getElementById('success-overlay').style.display = 'block';
+            } catch (e) {
+                alert('оплата отменена или произошла ошибка 😔');
             }
         }
     </script>
 </body>
 </html>
-
-
